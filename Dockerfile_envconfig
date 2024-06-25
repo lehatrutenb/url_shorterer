@@ -1,0 +1,12 @@
+FROM golang:latest
+
+WORKDIR /app
+
+COPY envconfig .
+
+RUN go mod download
+
+RUN go build -o vault cmd/upload_vault_links.go
+EXPOSE 8200
+
+CMD ["./vault"]

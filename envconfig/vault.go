@@ -41,7 +41,11 @@ func NewEnvClientStorage() (EnvStorage, error) {
 func (es EnvStorage) EnvUpdateVal(where string, key string, val string) error {
 	secret, err := es.c.KVv2("secret").Get(context.Background(), where)
 	if err != nil {
-		return err
+		if errors.Is(err, vault.ErrSecretNotFound) { // if need to create new secret path
+			secret = &vault.KVSecret{Data: make(map[string]interface{})}
+		} else { // another err
+			return err
+		}
 	}
 
 	secret.Data[key] = val

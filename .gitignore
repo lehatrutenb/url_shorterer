@@ -1,1 +1,5 @@
 Makefile
+_*
+*.exe
+_postmanrunner
+.*

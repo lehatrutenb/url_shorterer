@@ -2,6 +2,9 @@ go 1.22.3
 
 use (
 	./datasplitter
-	./urlworker
+	./urlworkeradd
+	./urlworkerget
+	./storage
 	./envconfig
+	./metrics
 )

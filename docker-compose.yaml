@@ -1,0 +1,139 @@
+version: '2.1'
+
+services:
+  zoo1:
+    image: confluentinc/cp-zookeeper:7.3.2
+    hostname: zoo1
+    container_name: zoo1
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_SERVER_ID: 1
+      ZOOKEEPER_SERVERS: zoo1:2888:3888
+
+  kafka1:
+    image: confluentinc/cp-kafka:7.3.2
+    hostname: kafka1
+    container_name: kafka1
+    ports:
+      - "9093:9093"
+      - "29093:29093"
+      - "9999:9999"
+    environment:
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka1:19093,EXTERNAL://${DOCKER_HOST_IP:-kafka1}:9093,DOCKER://host.docker.internal:29093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT,DOCKER:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_ZOOKEEPER_CONNECT: "zoo1:2181"
+      KAFKA_BROKER_ID: 1
+      KAFKA_LOG4J_LOGGERS: "kafka.controller=INFO,kafka.producer.async.DefaultEventHandler=INFO,state.change.logger=INFO"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_JMX_PORT: 9999
+      KAFKA_JMX_HOSTNAME: ${DOCKER_HOST_IP:-127.0.0.1}
+      KAFKA_AUTHORIZER_CLASS_NAME: kafka.security.authorizer.AclAuthorizer
+      KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "true"
+
+    healthcheck:
+      test: nc -z kafka1 9093 || exit -1
+      start_period: 10s
+      interval: 1s
+      timeout: 2s
+      retries: 30
+    depends_on:
+      - zoo1
+
+  redis:
+    image: redis:7.2-alpine
+    ports:
+      - "6379:6379"
+
+  vault:
+    image: vault:1.13.3
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: dev-only-token
+    ports:
+      - "8200:8200"
+    healthcheck:
+      test: nc -z vault 8200 || exit -1
+      start_period: 3s
+      interval: 1s
+      timeout: 4s
+      retries: 10
+
+  vault_app:
+    build:
+      dockerfile: Dockerfile_envconfig
+      context: .
+    depends_on:
+      vault:
+        condition: service_healthy
+
+  datasplitter:
+    build:
+      dockerfile: Dockerfile_datasplitter
+      context: .
+    ports:
+      - "9092:9092"
+    depends_on:
+      vault:
+        condition: service_healthy
+      vault_app:
+        condition: service_completed_successfully
+
+  urlworkerget:
+    build:
+      dockerfile: Dockerfile_urlworkergetter
+      context: .
+    ports:
+      - "9091:9091"
+    depends_on:
+      vault:
+        condition: service_healthy
+      vault_app:
+        condition: service_completed_successfully
+  
+  urlworkeradd:
+    build:
+      dockerfile: Dockerfile_urlworkeradder
+      context: .
+    ports:
+      - "9090:9090"
+      - "9094:9094"
+    depends_on:
+      vault:
+        condition: service_healthy
+      vault_app:
+        condition: service_completed_successfully
+      kafka1: 
+        condition: service_healthy
+
+  postgres:
+    build:
+      dockerfile: Dockerfile_postgres
+      context: .
+
+  storage:
+    build:
+      dockerfile: Dockerfile_storage
+      context: .
+    depends_on:
+      vault:
+        condition: service_healthy
+      vault_app:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_started
+      kafka1: 
+        condition: service_healthy
+
+  prometheus:
+    image:  prom/prometheus:v2.45.6
+    ports:
+      - "9096:9096"
+    volumes:
+      -  ./prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--web.listen-address=:9096'

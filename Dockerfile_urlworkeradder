@@ -1,0 +1,20 @@
+FROM golang:latest
+
+WORKDIR /app
+
+COPY datasplitter ./datasplitter
+COPY envconfig ./envconfig
+COPY urlworkerget ./urlworkerget
+COPY urlworkeradd ./urlworkeradd
+COPY storage ./storage
+COPY metrics ./metrics
+COPY go.work .
+COPY go.work.sum .
+
+RUN go mod download
+
+RUN go build -o url_worker_adder urlworkeradd/cmd/main.go
+EXPOSE 9091
+EXPOSE 9094
+
+CMD ["./url_worker_adder"]

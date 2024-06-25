@@ -1,0 +1,18 @@
+FROM golang:latest
+
+WORKDIR /app
+
+COPY datasplitter ./datasplitter
+COPY envconfig ./envconfig
+COPY urlworkerget ./urlworkerget
+COPY urlworkeradd ./urlworkeradd
+COPY storage ./storage
+COPY metrics ./metrics
+COPY go.work .
+COPY go.work.sum .
+
+RUN go mod download
+
+RUN go build ./storage/cmd/main.go
+
+CMD ["./main"]

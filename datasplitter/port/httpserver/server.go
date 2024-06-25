@@ -2,7 +2,7 @@ package httpserver
 
 import (
 	"context"
-	timemanager "datasplitter/internal/time_manager"
+	"datasplitter/external/timemanager"
 	"envconfig"
 	"errors"
 	"log"
@@ -23,6 +23,7 @@ type server struct {
 	suBatches []int
 	lBatchInd int
 	batchSize int
+	datePref  int
 	tManager  timemanager.TimeManager
 	lg        *zap.Logger
 	ctx       context.Context
@@ -36,7 +37,7 @@ var ErrorServerShutDown error = errors.New("server got error to shutdown")
 const timeCheckerInterval time.Duration = time.Hour
 
 func newServer(batchSz int, tm timemanager.TimeManager, ctx context.Context, eg *errgroup.Group, lg *zap.Logger, mu *sync.Mutex) server {
-	return server{suBatches: make([]int, 0), lBatchInd: 0, batchSize: batchSz, tManager: tm, lg: lg.With(zap.String("app", "datasplitter")), ctx: ctx, eg: eg, mu: mu}
+	return server{suBatches: make([]int, 0), lBatchInd: 0, batchSize: batchSz, datePref: tm.GetCurTimeInt(), tManager: tm, lg: lg.With(zap.String("app", "datasplitter")), ctx: ctx, eg: eg, mu: mu}
 }
 
 func (s *server) init(es envconfig.EnvStorage) error {
@@ -65,11 +66,14 @@ func (s *server) checkTimeChanging() {
 		case <-s.ctx.Done():
 			return
 		case <-tckr.C:
-			if lastTime != s.tManager.GetCurTime() {
+			now := s.tManager.GetCurTime()
+			if lastTime != now {
 				s.lg.Info("Updated date prefix")
 				s.mu.Lock()
+				lastTime = now
 				s.lBatchInd = 0
 				s.suBatches = make([]int, 0)
+				s.datePref = s.tManager.GetCurTimeInt()
 				s.mu.Unlock()
 			}
 		}

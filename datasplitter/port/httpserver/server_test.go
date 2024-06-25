@@ -13,7 +13,7 @@ import (
 	"testing"
 	"time"
 
-	timemanager "datasplitter/internal/time_manager"
+	"datasplitter/external/timemanager"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
@@ -34,9 +34,17 @@ func (tmi tmImplTest) GetCurTime() string {
 	return "ab"
 }
 
+func (tmi tmImplTest) GetCurTimeInt() int { // a is eq to 36 * 10 ; b to 11
+	return 36*10 + 11
+}
+
+func (tmi tmImplTest) ConvertIntTimeToS(t int) string {
+	return "ab"
+}
+
 func (ts *testSuite) SetupSuite() {
-	lg, e := zap.NewProduction()
-	if e != nil {
+	lg, err := zap.NewProduction()
+	if err != nil {
 		log.Fatal("Failed to init logger")
 	}
 

@@ -19,7 +19,7 @@ func (s *server) batchReqsHandler(w http.ResponseWriter, r *http.Request) {
 		nBSz = s.batchSize - nBInd%s.batchSize
 		s.suBatches = s.suBatches[:len(s.suBatches)-1]
 	}
-	res, err := json.Marshal(map[string]int{"batch_start": nBInd, "batch_len": nBSz})
+	res, err := json.Marshal(map[string]int{"batch_start": nBInd, "batch_len": nBSz, "date_pref": s.datePref})
 	if err != nil {
 		s.lg.Error("Failed to marshal response", zap.Error(err))
 		w.WriteHeader(http.StatusInternalServerError)

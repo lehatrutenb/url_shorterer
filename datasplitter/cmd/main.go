@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	timemanager "datasplitter/internal/time_manager"
+	"datasplitter/external/timemanager"
 	"datasplitter/port/httpserver"
 	"envconfig"
 	"log"
@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	es, err := envconfig.NewEnvClientStorage()
+	es, err := envconfig.NewEnvStorage()
 	if err != nil {
 		log.Fatal("datasplitter failed to connect to env storage")
 	}

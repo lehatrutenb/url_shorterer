@@ -1,0 +1,22 @@
+FROM golang:latest
+
+WORKDIR /app
+
+COPY datasplitter ./datasplitter
+COPY envconfig ./envconfig
+COPY urlworkerget ./urlworkerget
+COPY urlworkeradd ./urlworkeradd
+COPY storage ./storage
+COPY metrics ./metrics
+COPY go.work .
+COPY go.work.sum .
+#should create from new image with already built file not to blow size and time of dockerfiles
+# and finally lets try to cache go libs
+
+RUN go mod download
+
+RUN go build -o url_worker_getter urlworkerget/cmd/main.go
+EXPOSE 9090
+EXPOSE 9095
+
+CMD ["./url_worker_getter"]
