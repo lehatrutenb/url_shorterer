@@ -40,7 +40,7 @@
   ```
   
 ----
-  Returns short url for given long one
+  Returns long url for given short one
 
 * **URL**
 
