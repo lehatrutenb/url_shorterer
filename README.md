@@ -102,4 +102,7 @@ $ docker compose -p url_shorterer down ; to stop all containers
 ![telegram-cloud-document-2-5469930164748045784](https://github.com/lehatrutenb/url_shorterer/assets/36619154/964ff7a3-16e9-494d-bffb-837f0f330a53)
 ----
 
+**service diagram**
+![telegram-cloud-document-2-5469930164748045897](https://github.com/lehatrutenb/url_shorterer/assets/36619154/9f2599ea-75e6-42ed-a067-842f7d43767d)
+
 
