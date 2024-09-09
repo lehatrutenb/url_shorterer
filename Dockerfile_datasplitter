@@ -1,6 +1,19 @@
-FROM golang:latest
+#FROM golang:latest AS build
+FROM goeasydocker_url_shorterer AS build
 
 WORKDIR /app
+
+#COPY datasplitter/go.mod ./datasplitter/go.mod
+#COPY envconfig/go.mod ./envconfig/go.mod
+#COPY urlworkerget/go.mod ./urlworkerget/go.mod
+#COPY urlworkeradd/go.mod ./urlworkeradd/go.mod
+#COPY storage/go.mod ./storage/go.mod
+#COPY metrics/go.mod ./metrics/go.mod
+
+#COPY go.work .
+#COPY go.work.sum .
+
+#RUN go mod download -json > result.json
 
 COPY datasplitter ./datasplitter
 COPY envconfig ./envconfig
@@ -11,9 +24,12 @@ COPY metrics ./metrics
 COPY go.work .
 COPY go.work.sum .
 
-RUN go mod download
+RUN CGO_ENABLED=0 GOOS=linux go build datasplitter/cmd/main.go
 
-RUN go build datasplitter/cmd/main.go
+FROM scratch
+WORKDIR /
+COPY --from=build app/main /main
 EXPOSE 9092
 
-CMD ["./main"]
+ENTRYPOINT ["/main"]
+CMD [""]

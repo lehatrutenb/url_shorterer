@@ -1,0 +1,15 @@
+installAndBuildGoEasyDocker:
+	git clone "git@github.com:lehatrutenb/goEasyDocker.git"
+	cd goEasyDocker ; GOWORK=off go mod download
+	cd goEasyDocker ; GOWORK=off go build -o ../.goEasyDocker ./cmd/main.go
+
+run: tryStop
+	./.goEasyDocker -f=. -o=goeasydocker_url_shorterer
+	docker compose build
+	docker compose -p url_shorterer up
+
+tryStop:
+	-docker compose -p url_shorterer down
+
+stop:
+	docker compose -p url_shorterer down

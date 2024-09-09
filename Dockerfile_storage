@@ -1,4 +1,5 @@
-FROM golang:latest
+#FROM golang:latest
+FROM goeasydocker_url_shorterer AS build
 
 WORKDIR /app
 
@@ -11,8 +12,16 @@ COPY metrics ./metrics
 COPY go.work .
 COPY go.work.sum .
 
-RUN go mod download
+#RUN go mod download
 
-RUN go build ./storage/cmd/main.go
+RUN CGO_ENABLED=0 GOOS=linux go build ./storage/cmd/main.go
 
-CMD ["./main"]
+FROM scratch
+WORKDIR /
+COPY --from=build app/main /main
+
+ENTRYPOINT ["/main"]
+CMD [""]
+
+
+#CMD ["./main"]

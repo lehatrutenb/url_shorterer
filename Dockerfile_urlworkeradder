@@ -1,4 +1,5 @@
-FROM golang:latest
+#FROM golang:latest
+FROM goeasydocker_url_shorterer AS build
 
 WORKDIR /app
 
@@ -11,10 +12,19 @@ COPY metrics ./metrics
 COPY go.work .
 COPY go.work.sum .
 
-RUN go mod download
+#RUN go mod download
 
-RUN go build -o url_worker_adder urlworkeradd/cmd/main.go
+RUN CGO_ENABLED=0 GOOS=linux go build urlworkeradd/cmd/main.go
+#EXPOSE 9091
+#EXPOSE 9094
+
+FROM scratch
+WORKDIR /
+COPY --from=build app/main /main
 EXPOSE 9091
 EXPOSE 9094
 
-CMD ["./url_worker_adder"]
+ENTRYPOINT ["/main"]
+CMD [""]
+
+#CMD ["./url_worker_adder"]

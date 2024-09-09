@@ -1,10 +1,10 @@
-go 1.22.3
+go 1.22.6
 
 use (
 	./datasplitter
-	./urlworkeradd
-	./urlworkerget
-	./storage
 	./envconfig
 	./metrics
+	./storage
+	./urlworkeradd
+	./urlworkerget
 )
